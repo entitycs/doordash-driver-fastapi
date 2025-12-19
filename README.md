@@ -1,16 +1,16 @@
-# 🧠 Mermaid Tool Server
+# 🧠 DoorDash-Driver Tool Server
 
-A plug-and-play server for Mermaid tools using FastAPI.  
+A plug-and-play server for the DoorDash-Driver API using FastAPI.  
 
 ## 🚀 Quickstart
 
-Clone the repo and start the Mermaid server:
+Clone the repo, set up the .env vars and start the Server
 
 ```bash
-git clone https://github.com/open-webui/openapi-servers
-cd openapi-servers/servers/mermaid
-pip install -r requirements.txt
-uvicorn main:app --host 0.0.0.0 --reload
+git clone https://github.com/entitycs/doordash-driver-fastapi
+docker compose up
 ```
 
 That's it – you're live! 🟢
+
+Default port: 8099 - modify it in compose.yaml
