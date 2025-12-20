@@ -16,3 +16,37 @@ That's it – you're live! 🟢
 Default port: 8099 - modify it in compose.yaml
 
 [detail]
+
+# Required Config
+
+See config module sample.env files for environment variable settings
+| <h2>Config Type</h2> | <h2>Defines</h2> |
+|--------------------|--------------------|
+| <h3>🔩 **Internal Config**</h3> <br/> Developer Client (aka business) information | <h3> <br/> - [x]  Developer ID <br/> - [x] Key ID<br/> - [x] Signing Secret</h3>|
+| <h3>🏪**Merchant Config**</h3> <br/> Company + Store Information| <h3><br/>  - [x] Pickup External Business ID<br/>  - [x] Pickup External Store ID<br/>  - [x] Pickup Address<br/>  - [x] Pickup Phone Number </h3> |
+
+# Constrains
+
+Soft limits can be expanded through app updates.  
+
+- 25 Stores (soft limit)
+- todo:
+![image.png](attachment:b435fac4-fb39-4851-90fe-3165205c79a5.png)
+```mermaid
+---
+config:
+  kanban:
+    ticketBaseUrl: 'https://mermaidchart.atlassian.net/browse/#TICKET#'
+---
+kanban
+  Todo
+    [Create Documentation]
+    id7[implement local throttling]
+  [In progress]
+    id6[Create test for all endpoints]
+  id11[Done]
+    id5[test createQuote, listStores via Agent tool calling]
+    id2[setup environment variable configs for merchant and delivery - required + optional]
+    id3[test build, run service]
+
+```
