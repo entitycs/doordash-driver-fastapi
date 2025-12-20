@@ -31,7 +31,8 @@ Soft limits can be expanded through app updates.
 
 - 25 Stores (soft limit)
 - todo:
-![image.png](attachment:b435fac4-fb39-4851-90fe-3165205c79a5.png)
+<img width="1027" height="486" alt="Screenshot 2025-12-20 103511" src="https://github.com/user-attachments/assets/b96d9d32-4fc2-438e-aa20-a6ca0edb16ab" />
+
 ```mermaid
 ---
 config:
