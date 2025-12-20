@@ -4,13 +4,11 @@ author: YourName
 description: FastAPI wrapper for DoorDash Drive delivery and business/store management APIs
 required_open_webui_version: 0.4.0
 requirements: fastapi, pydantic, requests, pyjwt[crypto]
-version: 1.0.0
+version: 1.0.1
 licence: MIT
 """
-
-import os
+from __future__ import annotations
 import time
-import json
 import base64  # Add this import at the top
 
 from typing import Any, Dict, List, Optional, Union
@@ -19,11 +17,19 @@ import jwt
 import requests
 from fastapi import FastAPI, Body, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field, validator
-
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import BaseModel, Field, create_model
+from required.merchant.disallows_restricted import REQUIRED_MERCHANT
+from config.internal.internal_config import config
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.requests import Request
+from starlette.responses import StreamingResponse
+from logging import Logger
+from .models import *
+logger = Logger('uvcorn')
 app = FastAPI(
     title="DoorDash Drive API",
-    version="1.0.0",
+    version="1.0.2",
     description="Provides HTTP endpoints for DoorDash Drive (quotes, deliveries) and Developer (businesses, stores) APIs",
 )
 
@@ -35,24 +41,38 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Environment variables
-DEVELOPER_ID = os.getenv("DOORDASH_DEVELOPER_ID")
-KEY_ID = os.getenv("DOORDASH_KEY_ID")
-SIGNING_SECRET = os.getenv("DOORDASH_SIGNING_SECRET")
-
-if not all([DEVELOPER_ID, KEY_ID, SIGNING_SECRET]):
+if not all([config.DOORDASH_DEVELOPER_ID, config.DOORDASH_KEY_ID, config.DOORDASH_SIGNING_SECRET]):
     raise RuntimeError(
         "Missing required environment variables: DOORDASH_DEVELOPER_ID, DOORDASH_KEY_ID, DOORDASH_SIGNING_SECRET"
     )
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    body = await request.body()
+    logger.info(f"→ {request.method} {request.url}")
+    logger.info(f"Headers: {dict(request.headers)}")
+    logger.info(f"Body: {body.decode('utf-8', errors='replace') or ''}")
+    print("log request called")
+    response = await call_next(request)
 
+    async def stream():
+        async for chunk in response.body_iterator:
+            yield chunk
+        logger.info(f"← {response.status_code}")
+
+    return StreamingResponse(
+        stream(),
+        status_code=response.status_code,
+        headers=response.headers,
+        media_type=response.media_type,
+    )
 
 def generate_jwt_token() -> str:
     """Generate a short-lived JWT for DoorDash API authentication (5-minute expiry)"""
     issued_at = int(time.time())
     payload = {
         "aud": "doordash",
-        "iss": DEVELOPER_ID,
-        "kid": KEY_ID,
+        "iss": config.DOORDASH_DEVELOPER_ID,
+        "kid": config.DOORDASH_KEY_ID,
         "exp": issued_at + 300,
         "iat": issued_at,
     }
@@ -60,9 +80,8 @@ def generate_jwt_token() -> str:
 
     # Since we validated at startup, these are guaranteed to be str
     # But to help type checkers, we assert non-None
-    assert SIGNING_SECRET is not None, "SIGNING_SECRET is missing (should have been validated at startup)"
-
-    secret = SIGNING_SECRET
+    assert config.DOORDASH_SIGNING_SECRET is not None, "SIGNING_SECRET is missing (should be validated at startup)"
+    secret = config.DOORDASH_SIGNING_SECRET
 
     # Add padding if needed for base64url decoding
     missing_padding = len(secret) % 4
@@ -89,7 +108,10 @@ def doordash_request(method: str, url: str, json_data: Optional[Dict] = None) ->
     }
 
     try:
-        response = requests.request(method, url, json=json_data, headers=headers, timeout=30)
+        if json_data:
+            response = requests.request(method, url, json=json_data, headers=headers, timeout=30)
+        else:
+            response = requests.request(method, url, headers=headers, timeout=30)
         response.raise_for_status()
         return response.json()
     except requests.HTTPError as e:
@@ -107,106 +129,6 @@ def doordash_request(method: str, url: str, json_data: Optional[Dict] = None) ->
         raise HTTPException(status_code=500, detail={"error": f"Request failed: {str(e)}"})
 
 
-# ========================
-# Pydantic Models
-# ========================
-
-class DeliveryBase(BaseModel):
-    external_delivery_id: str = Field(..., description="Your internal reference ID for the delivery")
-    locale: Optional[str] = None
-    order_fulfillment_method: Optional[str] = None
-    origin_facility_id: Optional[str] = None
-    pickup_address: str = "2110 N Alameda Blvd, Las Cruces, NM"
-    pickup_business_name: Optional[str] = None
-    pickup_phone_number: Optional[str] = None
-    pickup_instructions: Optional[str] = None
-    pickup_reference_tag: Optional[str] = None
-    pickup_external_business_id: Optional[str] = None
-    pickup_external_store_id: Optional[str] = None
-    pickup_verification_metadata: Optional[Dict[str, Any]] = None
-
-    dropoff_address: str = Field(..., description="Required dropoff address")
-    dropoff_business_name: Optional[str] = None
-    dropoff_location: Optional[Dict[str, Any]] = None
-    dropoff_phone_number: str = Field(..., description="Required dropoff contact phone")
-    dropoff_instructions: Optional[str] = None
-    dropoff_contact_given_name: Optional[str] = None
-    dropoff_contact_family_name: Optional[str] = None
-    dropoff_contact_send_notifications: Optional[bool] = None
-    dropoff_options: Optional[Dict[str, Any]] = None
-    dropoff_address_components: Optional[Dict[str, Any]] = None
-    dropoff_pin_code_verification_metadata: Optional[Dict[str, Any]] = None
-
-    shopping_options: Optional[Dict[str, Any]] = None
-    order_value: Optional[int] = Field(None, description="Order value in cents")
-    items: Optional[List[Dict[str, Any]]] = None
-    pickup_time: Optional[str] = None
-    dropoff_time: Optional[str] = None
-    pickup_window: Optional[Dict[str, Any]] = None
-    dropoff_window: Optional[Dict[str, Any]] = None
-    customer_expected_sla: Optional[Any] = None
-    expires_by: Optional[Any] = None
-    shipping_label_metadata: Optional[Dict[str, Any]] = None
-    contactless_dropoff: Optional[bool] = None
-    action_if_undeliverable: Optional[str] = None
-    tip: Optional[int] = Field(None, description="Tip amount in cents")
-    order_contains: Optional[Dict[str, Any]] = None
-    dasher_allowed_vehicles: Optional[List[str]] = None
-    dropoff_requires_signature: Optional[bool] = None
-    promotion_id: Optional[str] = None
-    dropoff_cash_on_delivery: Optional[int] = None
-    order_route_type: Optional[str] = None
-    order_route_items: Optional[List[str]] = None
-
-
-class CreateQuoteRequest(DeliveryBase):
-    """Request body for creating a delivery quote"""
-    pass
-
-
-class AcceptQuoteRequest(BaseModel):
-    external_delivery_id: str
-    tip: Optional[int] = None
-    dropoff_phone_number: Optional[str] = None
-
-
-class CreateDeliveryRequest(DeliveryBase):
-    """Request body for creating a delivery directly"""
-    pass
-
-
-class UpdateDeliveryRequest(BaseModel):
-    external_delivery_id: str
-    # All fields optional for PATCH
-    pickup_address: Optional[str] = None
-    pickup_business_name: Optional[str] = None
-    pickup_phone_number: Optional[str] = None
-    pickup_instructions: Optional[str] = None
-    pickup_reference_tag: Optional[str] = None
-    pickup_external_business_id: Optional[str] = None
-    pickup_external_store_id: Optional[str] = None
-    dropoff_address: Optional[str] = None
-    dropoff_business_name: Optional[str] = None
-    dropoff_phone_number: Optional[str] = None
-    dropoff_instructions: Optional[str] = None
-    tip: Optional[int] = None
-    contactless_dropoff: Optional[bool] = None
-    action_if_undeliverable: Optional[str] = None
-    # ... add more as needed
-
-
-class CancelDeliveryRequest(BaseModel):
-    external_delivery_id: str
-
-
-class ListBusinessesRequest(BaseModel):
-    activationStatus: Optional[str] = Field(None, alias="activationStatus")
-    continuationToken: Optional[str] = Field(None, alias="continuationToken")
-
-
-# Generic response model (you can expand with specific ones if desired)
-class DoorDashResponse(BaseModel):
-    data: Dict[str, Any]
 
 
 # ========================
@@ -218,13 +140,46 @@ async def create_quote(data: CreateQuoteRequest = Body(...)):
     """
     Create a delivery quote using DoorDash Drive API.
     """
+    payload = data.model_dump(exclude={"external_delivery_id", "dropoff_address_components"}, exclude_unset=True)
+
     response = doordash_request(
         method="POST",
         url="https://openapi.doordash.com/drive/v2/quotes",
-        json_data=data.dict(exclude_unset=True),
+        json_data=payload,
     )
     return {"data": response}
 
+@app.post("/list_stores", response_model=ListStoreResponse)
+async def list_stores(data: ListStoreRequest = Body(...)):
+    """
+    List Store Request
+    
+    - Returns list of company stores registered with doordash drive api
+    
+    This endpoint serves as the FastAPI controller for fetching the company's store IDs registered with the doordash drive api.
+    It accepts a ListStoreRequest containing search parameters and executes a call to the doordash drive api.
+
+    Key Features:
+    - Fetches the stores the company has registered with the doordash drive api
+
+    Use Cases:
+    - Identifying store IDs the company has registered with the doordash drive api
+
+    :param data: Request object containing:
+        - external_business_id: Company-defined business ID
+    :type data: ListStoreRequest
+
+    :return: ListStoreResponse containing:
+        - result: List of Store Objects 
+    :rtype: ListStoreResponse
+    :raises HTTPException: Various status codes for different error conditions
+    """
+    external_id = data.external_business_id
+    response = doordash_request(
+        method="GET",
+        url=f"https://openapi.doordash.com/developer/v1/businesses/{external_id}/stores",
+    )
+    return {"data": response}
 
 @app.post("/accept_quote", response_model=DoorDashResponse)
 async def accept_quote(data: AcceptQuoteRequest = Body(...)):
@@ -232,7 +187,7 @@ async def accept_quote(data: AcceptQuoteRequest = Body(...)):
     Accept a previously created quote by external_delivery_id.
     """
     external_id = data.external_delivery_id
-    payload = data.dict(exclude={"external_delivery_id"}, exclude_unset=True)
+    payload = data.model_dump(exclude={"external_delivery_id"}, exclude_unset=True)
     response = doordash_request(
         method="POST",
         url=f"https://openapi.doordash.com/drive/v2/quotes/{external_id}/accept",
@@ -272,7 +227,7 @@ async def update_delivery(data: UpdateDeliveryRequest = Body(...)):
     Update fields of an existing delivery.
     """
     external_id = data.external_delivery_id
-    payload = data.dict(exclude={"external_delivery_id"}, exclude_unset=True)
+    payload = data.model_dump(exclude={"external_delivery_id"}, exclude_unset=True)
     response = doordash_request(
         method="PATCH",
         url=f"https://openapi.doordash.com/drive/v2/deliveries/{external_id}",

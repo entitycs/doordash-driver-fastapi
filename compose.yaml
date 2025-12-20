@@ -5,9 +5,3 @@ services:
     command: uvicorn fast_api_server.main:app --host 0.0.0.0 
     ports:
       - 8099:8000
-    environment:
-      DOORDASH_DEVELOPER_ID: ${DOORDASH_DEVELOPER_ID}
-      DOORDASH_KEY_ID: ${DOORDASH_KEY_ID}
-      DOORDASH_SIGNING_SECRET: ${DOORDASH_SIGNING_SECRET}
-
-

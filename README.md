@@ -14,3 +14,5 @@ docker compose up
 That's it – you're live! 🟢
 
 Default port: 8099 - modify it in compose.yaml
+
+[detail]
