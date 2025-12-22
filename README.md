@@ -25,7 +25,7 @@ See config module sample.env files for environment variable settings
 | <h3>🔩 **Internal Config**</h3> <br/> Developer Client (aka business) information | <h3> <br/> - [x]  Developer ID <br/> - [x] Key ID<br/> - [x] Signing Secret</h3>|
 | <h3>🏪**Merchant Config**</h3> <br/> Company + Store Information| <h3><br/>  - [x] Pickup External Business ID<br/>  - [x] Pickup External Store ID<br/>  - [x] Pickup Address<br/>  - [x] Pickup Phone Number </h3> |
 
-# Constrains
+# Constraints
 
 Soft limits can be expanded through app updates.  
 
