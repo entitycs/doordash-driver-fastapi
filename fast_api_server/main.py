@@ -9,23 +9,18 @@ licence: MIT
 """
 from __future__ import annotations
 import time
-import base64  # Add this import at the top
-
-from typing import Any, Dict, List, Optional, Union
-
 import jwt
+import base64  # Add this import at the top
 import requests
+from typing import Any, Dict, Optional
 from fastapi import FastAPI, Body, HTTPException, Header
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import BaseModel, Field, create_model
-from required.merchant.disallows_restricted import REQUIRED_MERCHANT
-from config.internal.internal_config import config
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import StreamingResponse
 from logging import Logger
 from .models import *
+from config.internal.internal_config import config
+
 logger = Logger('uvcorn')
 app = FastAPI(
     title="DoorDash Drive API",
@@ -45,6 +40,7 @@ if not all([config.DOORDASH_DEVELOPER_ID, config.DOORDASH_KEY_ID, config.DOORDAS
     raise RuntimeError(
         "Missing required environment variables: DOORDASH_DEVELOPER_ID, DOORDASH_KEY_ID, DOORDASH_SIGNING_SECRET"
     )
+
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     body = await request.body()
@@ -98,7 +94,6 @@ def generate_jwt_token() -> str:
     )
     return token
 
-
 def doordash_request(method: str, url: str, json_data: Optional[Dict] = None) -> Dict[str, Any]:
     """Centralized request handler with JWT auth"""
     token = generate_jwt_token()
@@ -106,7 +101,6 @@ def doordash_request(method: str, url: str, json_data: Optional[Dict] = None) ->
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
     }
-
     try:
         if json_data:
             response = requests.request(method, url, json=json_data, headers=headers, timeout=30)
@@ -115,7 +109,6 @@ def doordash_request(method: str, url: str, json_data: Optional[Dict] = None) ->
         response.raise_for_status()
         return response.json()
     except requests.HTTPError as e:
-        # Now response is guaranteed to exist because raise_for_status() was called
         error_detail = {}
         if hasattr(e, "response") and e.response is not None:
             try:
@@ -127,9 +120,6 @@ def doordash_request(method: str, url: str, json_data: Optional[Dict] = None) ->
         raise HTTPException(status_code=getattr(e.response, "status_code", 500), detail=error_detail)
     except requests.RequestException as e:
         raise HTTPException(status_code=500, detail={"error": f"Request failed: {str(e)}"})
-
-
-
 
 # ========================
 # Endpoints
@@ -204,10 +194,18 @@ async def create_delivery(data: CreateDeliveryRequest = Body(...)):
     response = doordash_request(
         method="POST",
         url="https://openapi.doordash.com/drive/v2/deliveries",
-        json_data=data.dict(exclude_unset=True),
+        json_data=data.model_dump(exclude_unset=True),
     )
     return {"data": response}
 
+@app.post("/get_delivery_request", response_model=DoorDashResponse)
+async def get_delivery_request(data: GetDeliveryRequest = Body(...)):
+    external_delivery_id = data.external_delivery_id
+    response = doordash_request(
+        method="GET",
+        url=f"https://openapi.doordash.com/drive/v2/deliveries/{external_delivery_id}"
+    )
+    return {"data": response}
 
 @app.get("/get_delivery/{external_delivery_id}", response_model=DoorDashResponse)
 async def get_delivery(external_delivery_id: str):

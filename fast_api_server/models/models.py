@@ -12,8 +12,8 @@ class DeliveryBase(BaseModel):
     origin_facility_id: Optional[str] = None
     pickup_address: str = Field(internal_config.PICKUP_ADDRESS)
     pickup_business_name: Optional[str] = None
-    pickup_phone_number: Optional[str] = None
-    pickup_instructions: Optional[str] = None
+    pickup_phone_number: str = Field(internal_config.PICKUP_PHONE_NUMBER)
+    pickup_instructions: Optional[str] = "Walk inside to pick up order."
     pickup_reference_tag: Optional[str] = None
     pickup_external_business_id: str = Field(internal_config.PICKUP_EXTERNAL_BUSINESS_ID, description="")
     pickup_external_store_id: str = Field(default_factory=lambda: internal_config.PICKUP_EXTERNAL_STORE_ID)
@@ -107,6 +107,12 @@ class ListStoreResponse(BaseModel):
     Response for list of company's stores registered with Doordash Drive API
     """
     data: Dict[str, Any]
+
+class GetDeliveryRequest(BaseModel):
+    """
+    Get the status of a doordash delivery given its external delivery id
+    """
+    external_delivery_id: str = Field(..., description="external delivery id")
 
 # Generic response model (you can expand with specific ones if desired)
 class DoorDashResponse(BaseModel):
