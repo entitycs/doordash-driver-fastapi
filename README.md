@@ -43,11 +43,13 @@ kanban
   Todo
     [Create Documentation]
     id7[implement local throttling]
+    id8[Tie in postgresql db - delivery_id logic first]
   [In progress]
     id6[Create test for all endpoints]
+    id10[Test admin tooling on port 8011]
   id11[Done]
     id5[test createQuote, listStores via Agent tool calling]
     id2[setup environment variable configs for merchant and delivery - required + optional]
     id3[test build, run service]
-
+    id9[Create postgresql local + docker environments, volumes]
 ```
