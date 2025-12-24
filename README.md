@@ -16,6 +16,9 @@ That's it – you're live! 🟢
 Default port: 8099 - modify it in compose.yaml
 
 [detail]
+# Recent Updates
+Added minimal postgreSQL database implementation
+<img width="798" height="630" alt="image" src="https://github.com/user-attachments/assets/8f1edf97-ea6a-4eaa-bbe8-d2cc3795c054" />
 
 # Required Config
 
@@ -43,13 +46,15 @@ kanban
   Todo
     [Create Documentation]
     id7[implement local throttling]
-    id8[Tie in postgresql db - delivery_id logic first]
+    id12[full coverage db logging for deliveries | success + error]
   [In progress]
     id6[Create test for all endpoints]
-    id10[Test admin tooling on port 8011]
+    id11[Design base 'Event' logging via postgre db]
   id11[Done]
     id5[test createQuote, listStores via Agent tool calling]
     id2[setup environment variable configs for merchant and delivery - required + optional]
     id3[test build, run service]
     id9[Create postgresql local + docker environments, volumes]
+    id8[Tie in postgresql db - delivery_id logic first]
+    id10[Test admin tooling on port 8011 - see Adminer service]
 ```
