@@ -1,0 +1,15 @@
+{
+  "external_delivery_id": "string",
+  "pickup_address": "2110 N Alameda Blvd, Las Cruces NM 88005, United States",
+  "pickup_phone_number": "+15752224444",
+  "dropoff_phone_number": "+115752224449",
+  "dropoff_address": "3460 Northridge Dr, Las Cruces NM 88005, United States",
+  "dropoff_address_components":{
+    "street_address":"3450 Northridge Dr",
+    "city":"Las Cruces",
+    "state":"NM",
+    "zip_code":"88005",
+    "country":"US"
+  },
+  "pickup_instructions":"Walk inside to pick up order."
+}

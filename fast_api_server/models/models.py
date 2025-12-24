@@ -1,34 +1,41 @@
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
-from config.merchant_config import config as internal_config
+from config.merchant_config import config as store_config
 # ========================
 # Pydantic Models
 # ========================
 
+class UpdateStoreRequest(BaseModel):
+    external_business_id : str = Field(store_config.PICKUP_EXTERNAL_BUSINESS_ID, description="")
+    external_store_id : str = Field(store_config.PICKUP_EXTERNAL_STORE_ID, description="")
+    name : str = Field(..., description="(warning): rename store")
+    phone_number : str = Field(..., description="(warning): update store phone number")
+    address : str = Field(..., description="(warning): update store address")
 class DeliveryBase(BaseModel):
     external_delivery_id: str = Field(..., description="Your internal reference ID for the delivery")
+    pickup_address: str = Field(store_config.PICKUP_ADDRESS)
+    pickup_external_business_id: str = Field(store_config.PICKUP_EXTERNAL_BUSINESS_ID, description="")
+    pickup_external_store_id: str = Field(default_factory=lambda: store_config.PICKUP_EXTERNAL_STORE_ID)
+    pickup_phone_number: str = Field(store_config.PICKUP_PHONE_NUMBER)
+    dropoff_phone_number: str = Field(..., description="Required dropoff contact phone")
+    dropoff_address: str = Field(..., description="Required dropoff address")
+    dropoff_address_components:Dict[str, Any] = Field(...,description= "")
+    
     locale: Optional[str] = None
     order_fulfillment_method: Optional[str] = None
     origin_facility_id: Optional[str] = None
-    pickup_address: str = Field(internal_config.PICKUP_ADDRESS)
     pickup_business_name: Optional[str] = None
-    pickup_phone_number: str = Field(internal_config.PICKUP_PHONE_NUMBER)
     pickup_instructions: Optional[str] = "Walk inside to pick up order."
     pickup_reference_tag: Optional[str] = None
-    pickup_external_business_id: str = Field(internal_config.PICKUP_EXTERNAL_BUSINESS_ID, description="")
-    pickup_external_store_id: str = Field(default_factory=lambda: internal_config.PICKUP_EXTERNAL_STORE_ID)
     pickup_verification_metadata: Optional[Dict[str, Any]] = None
 
-    dropoff_address: str = Field(..., description="Required dropoff address")
     dropoff_business_name: Optional[str] = None
     dropoff_location: Optional[Dict[str, Any]] = None
-    dropoff_phone_number: str = Field(..., description="Required dropoff contact phone")
     dropoff_instructions: Optional[str] = None
     dropoff_contact_given_name: Optional[str] = None
     dropoff_contact_family_name: Optional[str] = None
     dropoff_contact_send_notifications: Optional[bool] = None
     dropoff_options: Optional[Dict[str, Any]] = None
-    dropoff_address_components:Dict[str, Any] = Field(...,description= "")
     dropoff_pin_code_verification_metadata: Optional[Dict[str, Any]] = None
 
     shopping_options: Optional[Dict[str, Any]] = None
@@ -101,7 +108,7 @@ class ListStoreRequest(BaseModel):
     """
     Request for list of company's stores registered with Doordash Drive API
     """
-    external_business_id: str = internal_config.PICKUP_EXTERNAL_BUSINESS_ID
+    external_business_id: str = store_config.PICKUP_EXTERNAL_BUSINESS_ID
 class ListStoreResponse(BaseModel):
     """
     Response for list of company's stores registered with Doordash Drive API

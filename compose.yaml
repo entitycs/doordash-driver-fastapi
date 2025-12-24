@@ -7,6 +7,8 @@ services:
       - mynet
     ports:
       - 8099:8000
+    depends_on:
+      - postgresql
   doordash-drive-mcp:
     build:
       context: ./
@@ -17,6 +19,36 @@ services:
       - 8199:8000
     depends_on:
       - doordash-drive
+      - postgresql
+  postgresql:
+    image: postgres:14.20-alpine3.23
+    container_name: postgresql
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    networks:
+      - mynet
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_USER: doordash
+      POSTGRES_DB: doordash
+
+  adminer:
+    image: adminer
+    restart: always
+    networks:
+      - mynet
+    ports:
+      - 8011:8080
+    depends_on:
+      - postgresql
+
+volumes:
+  postgres-data:
+    name: postgres-data
 networks:
   mynet:
     driver: bridge
