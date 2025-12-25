@@ -71,12 +71,10 @@ def doordash_request(method: str, url: str, json_data: Optional[Dict] = None) ->
         if json_data:
             with psycopg.connect(f"host=postgresql port=5432 dbname=doordash user=doordash password={config.DOORDASH_DB_PW} connect_timeout=10") as conn:
                 with conn.cursor() as cur:
-                    # value = cur.execute("SELECT max(id) as delivery_id FROM deliveries").fetchone()
-                    # conn.commit()
-                    # if value:
-                    #     json_data["external_delivery_id"] = time.strftime("%Y-%m-%d") + " - " + str(value[0] + 1) if value[0] else "*error*"
-                    # else:
-                    #     raise Exception("No deliveries found in the database")
+                    value = cur.execute("SELECT max(id) as delivery_id FROM deliveries").fetchone()
+                    conn.commit()
+                    if value:
+                        json_data["external_delivery_id"] = time.strftime("%Y-%m-%d") + " - " + str(value[0] + 1) if value[0] else "*error*"
                     response = requests.request(method, url, json=json_data, headers=headers, timeout=30)
                     response.raise_for_status()
                     response_data = response.json()
