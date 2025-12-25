@@ -24,11 +24,16 @@ SET row_security = off;
 
 CREATE FUNCTION public.set_updated_at() RETURNS trigger
     LANGUAGE plpgsql
-    AS $$BEGIN
-  NEW.updated_at = now();
-  RETURN NEW;
-END;
-
+    AS $$BEGIN
+
+  NEW.updated_at = now();
+
+  RETURN NEW;
+
+END;
+
+
+
 $$;
 
 
@@ -79,7 +84,7 @@ CREATE TABLE public.events (
     id integer NOT NULL,
     status_code integer NOT NULL,
     store_id integer NOT NULL,
-    delivery_id jsonb,
+    delivery_id integer DEFAULT NULL,
     message jsonb NOT NULL,
     created_at timestamp with time zone NOT NULL
 );
@@ -211,4 +216,5 @@ ALTER TABLE ONLY public.events
 --
 
 \unrestrict gCilkrpQOec7c2LnQPlHeib9eYElYaBzgMfe4LT0Ad7DzAN735UMoGxAFgVKXL4
+
 
