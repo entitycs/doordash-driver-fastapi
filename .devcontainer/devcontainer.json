@@ -1,0 +1,17 @@
+{
+  "name": "python-dev",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {}
+  },
+  "postCreateCommand": "pip install ruff && npm install -g markdownlint-cli2",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "charliermarsh.ruff",
+        "DavidAnson.vscode-markdownlint"
+      ]
+    }
+  }
+}
+

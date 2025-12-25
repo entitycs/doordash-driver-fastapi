@@ -47,6 +47,7 @@ kanban
     [Create Documentation]
     id7[implement local throttling]
     id12[full coverage db logging for deliveries | success + error]
+    id13[todo - event looping w/ retry]
   [In progress]
     id6[Create test for all endpoints]
     id11[Design base 'Event' logging via postgre db]

@@ -7,7 +7,7 @@ from .models import (
 
 __all__ = [
     'AcceptQuoteRequest', 'CancelDeliveryRequest', 'CreateDeliveryRequest',
-    'CreateQuoteRequest', 'DeliveryBase', 'DoorDashResponse', 
-    'ListBusinessesRequest', 'ListStoreRequest', 'ListStoreResponse', 
+    'CreateQuoteRequest', 'DeliveryBase', 'DoorDashResponse',
+    'ListBusinessesRequest', 'ListStoreRequest', 'ListStoreResponse',
     'UpdateStoreRequest', 'UpdateDeliveryRequest', 'GetDeliveryRequest'
 ]
