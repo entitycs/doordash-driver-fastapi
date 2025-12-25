@@ -12,7 +12,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from config.internal.internal_config import config
-from .routers.doordash import router as doordash_router
+from fast_api_server.routers.doordash import router as doordash_router
+from fast_api_server.routers.webhooks import router as webhook_router
 from core.logging.logger import logger
 
 if not all([config.DOORDASH_DEVELOPER_ID, config.DOORDASH_KEY_ID, config.DOORDASH_SIGNING_SECRET, config.DOORDASH_DB_PW]):
@@ -48,3 +49,5 @@ async def log_requests(request: Request, call_next):
     return response
 
 app.include_router(doordash_router)
+app.include_router(webhook_router)
+

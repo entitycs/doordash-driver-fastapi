@@ -9,7 +9,7 @@ import psycopg
 from psycopg.types.json import Jsonb
 from typing import List, Optional, Dict, Any
 from fastapi import HTTPException
-from core.utils import add_query_field, Ref
+from core.utils import add_query_field, insert_query, Ref
 from psycopg import sql
 from psycopg.sql import Composed
 from config.internal.internal_config import config
@@ -54,13 +54,6 @@ def doordash_request(method: str, url: str, json_data: Optional[Dict] = None) ->
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
     }
-    def insert_query(table : str, field_names : Composed, values : List[Any]) -> Composed:
-        query = sql.SQL("INSERT INTO {} ({}) VALUES({}) RETURNING id").format(
-            sql.Identifier(table),
-            field_names,#.join(", ").as_string(conn),
-            sql.SQL(', ').join(values)
-        )
-        return query
 
     # Initialize response variable
     response_data =  {}

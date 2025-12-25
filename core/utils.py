@@ -1,4 +1,4 @@
-from typing import Dict, Generic, TypeVar
+from typing import Any, List, Dict, Generic, TypeVar
 from psycopg import sql
 from psycopg.sql import Composed
 
@@ -20,3 +20,14 @@ def add_query_field(
     else:
         target.value =  Composed([sql.Identifier(col_name)])
     return getattr(source,col_name,default)
+
+def insert_query(table : str, field_names : Composed, values : List[Any]) -> Composed:
+    """
+         
+    """
+    query = sql.SQL("INSERT INTO {} ({}) VALUES({}) RETURNING id").format(
+        sql.Identifier(table),
+        field_names,#.join(", ").as_string(conn),
+        sql.SQL(', ').join(values)
+    )
+    return query
