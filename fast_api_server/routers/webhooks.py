@@ -16,12 +16,9 @@ WEBHOOK_USER = config.DOORDASH_WEBHOOK_ID
 WEBHOOK_PASS = config.DOORDASH_WEBHOOK_SECRET
 
 def verify_basic_auth(authorization: str | None = Header(None)):
-    print("AUTH RAW:", repr(authorization))
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Unauthorized")
     encoded = authorization.split(" ")[1]
-    print("DECODED:", repr(base64.b64decode(encoded).decode()))
-    print("VS - ", repr(WEBHOOK_USER), repr(WEBHOOK_PASS))
     decoded = base64.b64decode(encoded).decode()
     username, password = decoded.split(":")
 
@@ -78,5 +75,5 @@ async def doordash_webhook(
         if conn is not None:
             logger.info("Closing PostfreSQL connection")
             conn.close()
-    print("Received DoorDash webhook:", payload)
+    logger.info("Received DoorDash webhook:", payload)
     return JSONResponse({"status": "ok"})

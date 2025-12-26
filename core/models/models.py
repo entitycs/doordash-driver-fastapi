@@ -11,6 +11,7 @@ class UpdateStoreRequest(BaseModel):
     name : str = Field(..., description="(warning): rename store")
     phone_number : str = Field(..., description="(warning): update store phone number")
     address : str = Field(..., description="(warning): update store address")
+    
 class DeliveryBase(BaseModel):
     external_delivery_id: str = Field(..., description="Your internal reference ID for the delivery")
     pickup_address: str = Field(store_config.PICKUP_ADDRESS)
