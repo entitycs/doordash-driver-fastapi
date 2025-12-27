@@ -1,0 +1,39 @@
+sequenceDiagram
+
+participant User as User
+participant Continue_CLI as Continue CLI
+participant Ollama_Server as Ollama Server
+participant pgSQL as PostgreSQL
+participant fastAPI_Server as FastAPI Proxy Server (OpenAPI Tool)
+participant fastMCP_Server as FastMCP Server (MCP Tool Server)
+participant dd_DriverAPI_Route as Driver API Route (External Service)
+participant dd_WebhookAPI_Route as Webhook API Route (External Service)
+
+    Note over fastMCP_Server, fastAPI_Server: Startup: FastMCP Server launches and exposes OpenAPI spec
+    fastMCP_Server->>+fastAPI_Server: Reads openapi.json, launches proxy instance
+    Note over fastAPI_Server, fastMCP_Server: FastAPI proxy translates MCP <-> OpenAPI requests
+
+    Note over Continue_CLI: Continue CLI configured with model (Ollama) and MCP tool server
+    User->>+Continue_CLI: Starts CLI session, sends prompt requiring tool use
+    Continue_CLI->>+Ollama_Server: Sends prompt + Tools (OpenAPI spec from FastAPI proxy) to model
+    Ollama_Server-->>-Continue_CLI: Model processes, may decide to call tool (returns tool call)
+
+    alt Model calls tool
+        Continue_CLI->>+fastAPI_Server: HTTP request to tool endpoint (via OpenAPI)
+        fastAPI_Server->>pgSQL: Generate UID / Logs Events (if needed)
+        fastAPI_Server->>+fastMCP_Server: Translates OpenAPI request to MCP protocol
+        fastMCP_Server-->>-fastAPI_Server: Executes tool logic, returns result
+        fastAPI_Server->>+dd_DriverAPI_Route: Route Requests to external Driver API (if tool requires)
+        dd_DriverAPI_Route-->>-fastAPI_Server: Result Payload returned
+        alt Async webhook involved
+            dd_WebhookAPI_Route->>+fastAPI_Server: Webhook attempts comms with /webhooks endpoint
+            fastAPI_Server-->>-dd_WebhookAPI_Route: Returns 200 OK to prevent retries
+        end
+        fastAPI_Server->>pgSQL: Logs Events
+        fastAPI_Server-->>-Continue_CLI: Tool response payload
+        Continue_CLI->>+Ollama_Server: Sends tool response back to model
+        Ollama_Server-->>-Continue_CLI: Model generates final response
+    end
+
+    Continue_CLI-->>-User: Final response displayed in terminal
+    Note over User, Continue_CLI: User receives and processes API response data
