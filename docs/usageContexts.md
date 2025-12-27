@@ -6,6 +6,11 @@ Architectural Context Overview
 </summary>
 
 ```mermaid
+---
+config:
+  theme: forest
+---
+
 flowchart LR
 
     subgraph UserSpace[User Space]
@@ -58,7 +63,8 @@ flowchart LR
     D --> A
     H --> A
 
-    classDef servers fill:#fea,stroke:#333,stroke-width:4px;
+    classDef servers fill:#fea,color:#000,stroke:#333;
+
 ```
 
 </details>
@@ -69,21 +75,27 @@ Usage Contexts : CLI + WebUI Agent Tool
 </summary>
 
 ```mermaid
-
 ---
 config:
-  theme: redux-color
+  theme: forest
 ---
 
 sequenceDiagram
+    autonumber
     actor User as User
-    participant Client as Client Interface<br/>~WebUI or CLI~
-    participant Orchestrator as Ollama Model Orchestrator
-    participant FastAPI as FastAPI Server<br/>~Primary OpenAPI Tool Server~
-    participant FastMCP as FastMCP Server<br/>~MCP Wrapper Depends on FastAPI~
-    participant DB as PostgreSQL
+    box rgba(223, 230, 233, 1) Containerized Network<br/>Not Included
+        participant Client as Client Interface<br/>~WebUI or CLI~
+        participant Orchestrator as Ollama Model Orchestrator
+    end 
+    box rgba(255, 254, 254, 1)Containerized Network
+        participant FastAPI as FastAPI Server<br/>~Primary OpenAPI Tool Server~
+        participant FastMCP as FastMCP Server<br/>~MCP Wrapper Depends on FastAPI~
+        participant DB as PostgreSQL Server
+    end
+    box rgba(195, 195, 195, 1) Non-Ownership
     participant DriverAPI as External Driver API
     participant Webhook as Webhook Endpoint
+    end
 
     Note over FastAPI, FastMCP: FastAPI is the defined server.<br/>FastMCP wraps.
 
@@ -91,7 +103,7 @@ sequenceDiagram
     Client->>Orchestrator: Send prompt + tool metadata
     Orchestrator-->>Client: Model decides to call tool
 
-    alt Tool call triggered
+    %% alt Tool call triggered
         %% Client routing logic
         alt Client = OpenWebUI
             Client->>FastAPI: OpenAPI tool request
@@ -123,9 +135,11 @@ sequenceDiagram
 
         Client->>Orchestrator: Provide tool output to model
         Orchestrator-->>Client: Final model response
-    end
+    %% end
 
-    Client-->>User: Display final output
+    Client-->>User: Display final order output
+    FastAPI-->>User: Webhook updates as appropriate
+
 ```
 
 </details>
