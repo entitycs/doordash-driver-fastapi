@@ -1,3 +1,4 @@
 **/.env
 .venv
-**/.mmd
+**/*.mmd
+**/dev-notebook*
