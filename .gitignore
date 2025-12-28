@@ -2,4 +2,4 @@
 .venv
 **/*.mmd
 **/dev-notebook*
-**/.ipynb_checkpoints
+**/.ipynb_checkpoints/*
