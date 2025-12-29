@@ -18,7 +18,6 @@ Default port: 8099 - modify it in compose.yaml
 [detail]
 # Recent Updates
 Added minimal postgreSQL database implementation
-<img width="798" height="630" alt="image" src="https://github.com/user-attachments/assets/8f1edf97-ea6a-4eaa-bbe8-d2cc3795c054" />
 
 # Required Config
 
@@ -34,7 +33,6 @@ Soft limits can be expanded through app updates.
 
 - 25 Stores (soft limit)
 - todo:
-<img width="1027" height="486" alt="Screenshot 2025-12-20 103511" src="https://github.com/user-attachments/assets/b96d9d32-4fc2-438e-aa20-a6ca0edb16ab" />
 
 ```mermaid
 ---
