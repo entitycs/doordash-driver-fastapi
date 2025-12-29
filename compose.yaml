@@ -12,14 +12,13 @@ services:
   doordash-drive-mcp:
     build:
       context: ./
-    command: uvicorn fast_api_server.main:app --host 0.0.0.0 
+    command: python -m fast_mcp_server.main
     networks:
       - mynet
     ports:
       - 8199:8000
     depends_on:
       - doordash-drive
-      - postgresql
   postgresql:
     image: postgres:14.20-alpine3.23
     container_name: postgresql
